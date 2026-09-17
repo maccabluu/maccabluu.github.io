@@ -1,0 +1,35 @@
+name: Build sharp Level 5 image
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-level5-sharp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v4
+
+      - name: Rebuild sharp Level 5 image
+        run: |
+          cat assets/level5-sharp/0.txt assets/level5-sharp/1.txt assets/level5-sharp/2.txt assets/level5-sharp/3.txt assets/level5-sharp/4.txt assets/level5-sharp/5.txt assets/level5-sharp/6.txt | base64 -d > assets/wambam-level5-gameplay-sharp.avif
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text()
+          s = s.replace('/assets/wambam-level5-gameplay.jpg', '/assets/wambam-level5-gameplay-sharp.avif')
+          p.write_text(s)
+          PY
+
+      - name: Commit sharp image
+        run: |
+          git config user.name "BluStudio"
+          git config user.email "actions@users.noreply.github.com"
+          git add assets/wambam-level5-gameplay-sharp.avif index.html
+          git commit -m "Use sharp Level 5 gameplay screenshot"
+          git push
